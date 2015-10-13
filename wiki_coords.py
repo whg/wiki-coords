@@ -1,6 +1,6 @@
 """
 Usage:
-  wiki_coords.py <wiki_file> [--seek=<b>] [--dry-run]
+  wiki_coords.py <wiki_file> [--seek=<b>] [--dry-run] [--db=<db>]
   wiki_coords.py (-h | --help)
   wiki_coords.py --version
 
@@ -9,6 +9,7 @@ Options:
   --version     Show version.
   --seek=<b>    Seek to point in file [default: 0]
   --dry-run     Don't save to the database
+  --db=<db>     Database to use [default: wiki]
 """
 
 import xml.etree.ElementTree as ET
@@ -16,11 +17,12 @@ from sys import stdout, argv
 from glob import glob
 import re
 import psycopg2
+from psycopg2.extensions import AsIs
 import math
 from docopt import docopt
 
 from geotools import coordinate, wiki_coord, lat2y
-from util import grab_part, make_title
+from util import grab_partn, make_title, grab_parto
 
 
 
@@ -32,8 +34,9 @@ def save(title, text, latlon, file_dir, dryrun):
     except ValueError:
         return False
 
+    print(title, lat, lon)
     if not dryrun:
-        cursor.execute('INSERT INTO '+db_table+' (page,lat,lon,x,y) VALUES (%s,%s,%s,%s,%s)', (title, lat, lon, lon, y)) 
+        cursor.execute('INSERT INTO %s (page,lat,lon,x,y) VALUES (%s,%s,%s,%s,%s)', (AsIs(db_table), title, lat, lon, lon, y)) 
 
         path = '%s/%s.wiki' % (file_dir, title,)
         if path not in already_written:
@@ -59,7 +62,7 @@ if __name__ == "__main__":
     db_table = tablename(language)
     file_directory = 'geo_pages/%s' % (language,)
     
-    db = psycopg2.connect("dbname=wiki user=root")
+    db = psycopg2.connect("dbname=%s user=root" % args['--db'])
     cursor = db.cursor()
     f = open(wikifile)
 
@@ -85,18 +88,20 @@ if __name__ == "__main__":
         try:
             cursor.execute('CREATE TABLE %s (id serial primary key, page text unique, lat real, lon real, x real, y real);' % db_table)
             db.commit()
-            print('created table %s', (db_table,))
+            print('created table %s' %(db_table,))
         except psycopg2.ProgrammingError:
             print('table %s already exists' % db_table)
     
     try:
         while True:
             try:
-                payload, remainder = grab_part(f, '<page>', '</page>', buffer)
+                payload, buffer = grab_partn(f, '<page>', '</page>', buffer)
             except EOFError:
                 break
                 
-            buffer = remainder
+            if written > 130:
+                break
+
             counter+= 1    
             xml = ET.fromstring(payload)
             

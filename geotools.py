@@ -37,19 +37,16 @@ def coordinate(latitude=None, lat=None, location_lat=None,
             return None
 
         latd = float(lat_degrees)
-        latm = float(latm or lat_min or lat_m or 0)
-        lats = float(lats or lat_sec or lat_s or 0)
+        latm = float(latm or lat_min or lat_m or lat_minutes or 0)
+        lats = float(lats or lat_sec or lat_s or lat_seconds or 0)
         
         lon_degrees = longd or lon_deg or long_d or long_degrees
         if lon_degrees == None:
             return None
             
         lond = float(lon_degrees)
-        lonm = float(longm or lon_min or long_m or 0)
-        lons = float(longs or lon_sec or long_s or 0)
-        
-        if latd == None or lond == None:
-            return None
+        lonm = float(longm or lon_min or long_m or long_minutes or 0)
+        lons = float(longs or lon_sec or long_s or long_seconds or 0)
 
         latitude  = latd + latm * AMIN + lats * ASEC
         longitude = lond + lonm * AMIN + lons * ASEC
