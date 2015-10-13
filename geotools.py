@@ -29,9 +29,10 @@ def coordinate(latitude=None, lat=None, location_lat=None,
 
     latitude = float(latitude or lat or location_lat or 0)
     longitude = float(longitude or long or location_lon or 0)
-
+    
     if not latitude and not longitude:
-        lat_degrees = latd or lat_deg or lat_d
+
+        lat_degrees = latd or lat_deg or lat_d or lat_degrees
         if lat_degrees == None:
             return None
 
@@ -39,14 +40,14 @@ def coordinate(latitude=None, lat=None, location_lat=None,
         latm = float(latm or lat_min or lat_m or 0)
         lats = float(lats or lat_sec or lat_s or 0)
         
-        lon_degrees = longd or lon_deg or long_d
+        lon_degrees = longd or lon_deg or long_d or long_degrees
         if lon_degrees == None:
             return None
-
+            
         lond = float(lon_degrees)
         lonm = float(longm or lon_min or long_m or 0)
         lons = float(longs or lon_sec or long_s or 0)
-
+        
         if latd == None or lond == None:
             return None
 
@@ -60,8 +61,9 @@ def coordinate(latitude=None, lat=None, location_lat=None,
     EW = long_direction or longEW or long_EW or E_or_W
     if EW and EW.strip() == 'W':
         longitude*= -1
+    
 
-    if latitude and longitude:
+    if latitude != None and longitude != None:
         return latitude, longitude
 
 
