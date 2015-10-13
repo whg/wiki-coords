@@ -1,6 +1,6 @@
 """
 Usage:
-  wiki_coords.py <wiki_file> [--seek=<b>]
+  wiki_coords.py <wiki_file> [--seek=<b>] [--dry-run]
   wiki_coords.py (-h | --help)
   wiki_coords.py --version
 
@@ -8,6 +8,7 @@ Options:
   -h --help     Show this screen.
   --version     Show version.
   --seek=<b>    Seek to point in file [default: 0]
+  --dry-run     Don't save to the database
 """
 
 import xml.etree.ElementTree as ET
@@ -23,7 +24,7 @@ from util import grab_part, make_title
 
 
 
-def save(title, text, latlon, file_dir):
+def save(title, text, latlon, file_dir, dryrun):
 
     lat, lon = latlon
     try:
@@ -31,13 +32,15 @@ def save(title, text, latlon, file_dir):
     except ValueError:
         return False
 
-    cursor.execute('INSERT INTO '+db_table+' (page,lat,lon,x,y) VALUES (%s,%s,%s,%s,%s)', (title, lat, lon, lon, y)) 
-    path = '%s/%s.wiki' % (file_dir, title,)
-    if path not in already_written:
-        with open(path, 'w') as wf:
-            wf.write(text)
+    if not dryrun:
+        cursor.execute('INSERT INTO '+db_table+' (page,lat,lon,x,y) VALUES (%s,%s,%s,%s,%s)', (title, lat, lon, lon, y)) 
 
-        return True
+        path = '%s/%s.wiki' % (file_dir, title,)
+        if path not in already_written:
+            with open(path, 'w') as wf:
+                wf.write(text)
+
+    return True
 
 def lang_from_file(filename):
     
@@ -72,15 +75,19 @@ if __name__ == "__main__":
     file_writes = 0
     buffer = ''
 
-    
+
     if args['--seek']:
         f.seek(int(args['--seek']))
         print('seeked until %s' % args['--seek'])
 
-    
-    cursor.execute('CREATE TABLE %s (id serial primary key, page text unique, lat real, lon real, x real, y real);' % db_table)
-    db.commit()
-    print('created table %s', (db_table,))
+
+    if not args['--dry-run']:
+        try:
+            cursor.execute('CREATE TABLE %s (id serial primary key, page text unique, lat real, lon real, x real, y real);' % db_table)
+            db.commit()
+            print('created table %s', (db_table,))
+        except psycopg2.ProgrammingError:
+            print('table %s already exists' % db_table)
     
     try:
         while True:
@@ -108,7 +115,7 @@ if __name__ == "__main__":
                 continue
     
             if coords:
-                save(title, text, coords, file_directory)
+                save(title, text, coords, file_directory, args['--dry-run'])
                 withcoord+=1
                 written+=1
                 continue
@@ -125,12 +132,12 @@ if __name__ == "__main__":
     
             match = re.findall(regex, infobox[0])
             if match:
-                args = dict(filter(lambda e: 'lat' in e[0] or 'lon' in e[0], match))
+                coord_args = dict(filter(lambda e: 'lat' in e[0] or 'lon' in e[0], match))
                 
                 try:
-                    latlon = coordinate(**args)
+                    latlon = coordinate(**coord_args)
                     if latlon:
-                        save(title, text, latlon, file_directory)
+                        save(title, text, latlon, file_directory, args['--dry-run'])
                         written+= 1
     
                 except ValueError:
@@ -139,7 +146,9 @@ if __name__ == "__main__":
             stdout.write('\r%d: written %d (with coord %d, file writes: %d)' % (counter, written, withcoord, file_writes))
     except Exception as e:
         print('\n\nfile at : ', f.tell())
-        print(e)
+
+        import traceback
+        traceback.print_exc(file=stdout)
         # import IPython
         # IPython.embed()
     finally:
