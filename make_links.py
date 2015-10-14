@@ -69,7 +69,7 @@ except Exception as e:
     traceback.print_exc(file=stdout)
                    
 finally:
-    print('added %d, tried %d' % (added,tried,))
+    print('\nadded %d, tried %d' % (added,tried,))
     db.commit()
     cursor.close()
     db.close()
