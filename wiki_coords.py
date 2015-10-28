@@ -34,7 +34,6 @@ def save(title, text, latlon, file_dir, dryrun):
     except ValueError:
         return False
 
-    print(title, lat, lon)
     if not dryrun:
         cursor.execute('INSERT INTO %s (page,lat,lon,x,y) VALUES (%s,%s,%s,%s,%s)', (AsIs(db_table), title, lat, lon, lon, y)) 
 
@@ -98,9 +97,6 @@ if __name__ == "__main__":
                 payload, buffer = grab_partn(f, '<page>', '</page>', buffer)
             except EOFError:
                 break
-                
-            if written > 130:
-                break
 
             counter+= 1    
             xml = ET.fromstring(payload)
@@ -125,12 +121,13 @@ if __name__ == "__main__":
                 written+=1
                 continue
     
-            # do this to filter out places like the moon
+
             infobox = re.findall(ib_regex, text)
             
             if len(infobox) == 0 or not infobox[0]:
                 continue
-            
+
+            # do this to filter out places like the moon            
             if re.search(crater_regex, infobox[0]):
                 continue
     
