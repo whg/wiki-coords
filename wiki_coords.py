@@ -37,10 +37,10 @@ def save(title, text, latlon, file_dir, dryrun):
     if not dryrun:
         cursor.execute('INSERT INTO %s (page,lat,lon,x,y) VALUES (%s,%s,%s,%s,%s)', (AsIs(db_table), title, lat, lon, lon, y)) 
 
-        path = '%s/%s.wiki' % (file_dir, title,)
-        if path not in already_written:
-            with open(path, 'w') as wf:
-                wf.write(text)
+        # path = '%s/%s.wiki' % (file_dir, title,)
+        # if path not in already_written:
+        #     with open(path, 'w') as wf:
+        #         wf.write(text)
 
     return True
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     written = 0
     withcoord = 0
-    already_written = set(glob('%s/*.wiki' % (file_directory,)))
+    already_written = set() #glob('%s/*.wiki' % (file_directory,)))
     regex = re.compile(r'latitude\s*=\s*(-?[0-9.]+)\s*\|\s*longitude\s*=\s*(-?[0-9.]+)\s')
 
     ib_regex = re.compile(r'{{\s*Infobox[^}]*}}')
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     buffer = ''
 
 
-    if args['--seek']:
+    if int(args['--seek']):
         f.seek(int(args['--seek']))
         print('seeked until %s' % args['--seek'])
 
@@ -122,17 +122,17 @@ if __name__ == "__main__":
                 continue
     
 
-            infobox = re.findall(ib_regex, text)
+            # infobox = re.findall(ib_regex, text)
             
-            if len(infobox) == 0 or not infobox[0]:
-                continue
+            # if len(infobox) == 0 or not infobox[0]:
+            #     continue
 
             # do this to filter out places like the moon            
-            if re.search(crater_regex, infobox[0]):
+            if re.search(crater_regex, text):
                 continue
     
     
-            match = re.findall(regex, infobox[0])
+            match = re.findall(regex, text)
             if match:
                 coord_args = dict(filter(lambda e: 'lat' in e[0] or 'lon' in e[0], match))
                 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     finally:
         print(counter)
     
-        print('\nfile at : ', f.tell())
+        print('file at : ', f.tell())
         f.close()
         db.commit()
         cursor.close()
