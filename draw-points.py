@@ -45,7 +45,7 @@ if __name__ == "__main__":
     c.stroke(path.rect(0, 0, 360*d, 360*d), [color.rgb(0.3, 0.3, 1)])
 
     if not linkfile:
-        for name, x, y in places.items():
+        for id, (name, x, y) in places.items():
 
             if x < 180 and x > -180 and y > -180 and y < 180:
                 c.fill(path.rect((x+180)*d, (y+180)*d, size, size), [col])
@@ -58,6 +58,7 @@ if __name__ == "__main__":
         print(len(links.values()))
         from collections import defaultdict
         ordered = defaultdict(list)
+
         for id, depth in links.items():
             ordered[depth].append(id)
 
@@ -65,6 +66,12 @@ if __name__ == "__main__":
             # cursor.execute('SELECT id, x, y FROM %s_pages WHERE id=%s', (AsIs(args['<language>']),id))
             # id, x, y = cursor.fetchone()
             print('depth: %d links %d' % (depth, len(ids)))
+
+            c = canvas.canvas()
+            col = color.rgb(0, 0, 0)
+            c.stroke(path.rect(0, 0, 360*d, 360*d), [color.rgb(0.3, 0.3, 1)])
+
+            added = 0
             for id in ids:
                 _, x, y = places[id]
 
@@ -76,7 +83,7 @@ if __name__ == "__main__":
 
 
             print('added %d places' % (added,))
-            outputfile = '%s/%s-points-%d.pdf' % (args['--output-dir'], args['<language>'], added);
+            outputfile = '%s/%s-depth-%02d-points-%08d.pdf' % (args['--output-dir'], args['<language>'], depth, added);
             c.writePDFfile(outputfile)
 
     cursor.close()
