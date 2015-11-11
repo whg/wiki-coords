@@ -91,7 +91,6 @@ if __name__ == "__main__":
             stdout.write('\r%d: added %d, failed %d' % (counter, added, failed))
 
     except Exception as e:
-        print('\n\nfile at : ', f.tell())
 
         import traceback
         traceback.print_exc(file=stdout)

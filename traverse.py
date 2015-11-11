@@ -46,47 +46,8 @@ cursor.execute('SELECT from_id, to_id FROM %s_links', (AsIs(language),))
 for fro, to in cursor.fetchall():
     maps[fro].append(to)
 
-print(len(maps))
 
-def go(language, id, depth):
-
-    # cursor.execute('SELECT to_id FROM %s_links WHERE from_id=%s', (AsIs(language), id))
-    # to_ids = cursor.fetchall()
-    
-    to_ids = maps[id][:]
-
-    if depth <= 0:
-#         for id in to_ids:
-#             if id not in output:
-#                 output[id] = (id, depth)
-#                 # output.add(id)
-# # output.extend([(id[0], depth) for id in to_ids])
-        return
-        # return [id for id in to_ids]
-
-    
-    for tid in to_ids:
-        go(language, tid, depth-1)
-        if id not in output:
-            output[tid] = (tid, depth)
-            counts[depth]+= 1
-
-
-
-def go2(from_id, maxdepth, depth=0):
-    
-    to_ids = maps[from_id]
-    
-    for to_id in to_ids:
-        if to_id not in output:
-            output[to_id] = depth
-            counts[depth]+= 1
-
-    if depth < maxdepth:
-        for to_id in to_ids:
-            go2(to_id, maxdepth, depth+1)
-
-def go3(from_id, max_depth):
+def traverse(from_id, max_depth):
 
     output = {}
     
@@ -106,11 +67,9 @@ def go3(from_id, max_depth):
         
     return output
 
-#res = go(language, id, depth)
-output = go3(id, depth)
 
-# ids = set([id for id, depth in output])
-# print(len(ids))
+output = traverse(id, depth)
+
 print(len(output))
 
 print(counts)
@@ -120,7 +79,6 @@ if not args['--dry-run']:
     with open('links-%s-%s.pickle' % (args['<page>'], depth), 'wb') as f:
         pickle.dump(output, f)
 
-db.commit()
 cursor.close()
 db.close()
 
