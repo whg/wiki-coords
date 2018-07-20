@@ -1,6 +1,6 @@
 import re
 
-READ_STEP = 500
+READ_STEP = 250
 
 def grab_partn(f, start_delimiter, end_delimiter, buffer=''):
     """
@@ -21,7 +21,10 @@ def grab_partn(f, start_delimiter, end_delimiter, buffer=''):
             buffer+= bit
             match = re.search(regex, lastbit + bit)
             if match:
-                return (len(buffer) - len(bit) - len(lastbit)) + match.span()[0]
+                if lastbit == buffer:
+                    return (len(buffer) - len(bit)) + match.span()[0]
+                else:
+                    return (len(buffer) - len(bit) - len(lastbit)) + match.span()[0]
             lastbit = bit
 
     start_pos = next_bit(start_re)

@@ -61,6 +61,15 @@ These come in MySQL dumps.
 
 URL like http://dumps.wikimedia.org/hrwiki/20151002/hrwiki-20151002-geo_tags.sql.gz
 
+```sh
+>output
+for i in $(cat ~/language_codes); 
+do 
+  echo $i >>output; 
+  mysql $i"_wiki" -e "select count(*) from geo_tags where gt_globe='earth'">>output; 
+done
+```
+
 | lang   |   count |
 |--------+---------|
 | en     | 1656189 |

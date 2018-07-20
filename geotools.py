@@ -15,7 +15,7 @@ ASEC = AMIN/60.0
 
 
 def coordinate(latitude=None, lat=None, location_lat=None,
-               longitude=None, long=None, location_lon=None,
+               longitude=None, long=None, location_lon=None, 
                latd=None, lat_deg=None, lat_d=None, lat_degrees=None,
                latm=None, lat_min=None, lat_m=None, lat_minutes=None,
                lats=None, lat_sec=None, lat_s=None, lat_seconds=None,
@@ -71,32 +71,33 @@ def wiki_coord(f):
     m = re.search(cre, f)
 
     try:
-        data = m.groups(0)[0]
+        for group in m.groups():
 
-        if 'title' not in data:
-            return None
+            if 'title' not in group and len(m.groups()) > 1:
+                return None
 
-        if 'globe' in data and 'globe:earth' not in data:
-            return None
-
+            if 'globe' in group and 'globe:earth' not in group:
+                return None
             
-        bits = data.split('|')
-        bits = [b for b in bits if '=' not in b and ':' not in b]
+            
+            bits = group.split('|')
+            bits = [b for b in bits if '=' not in b and ':' not in b]
         
-        if len(bits) < 2:
-            return None
+            if len(bits) < 2:
+                return None
 
-        if len(bits) == 2:
-            return coordinate(latitude=bits[0], longitude=bits[1])
-        elif len(bits) == 4:
-            return coordinate(latitude=bits[0], N_or_S=bits[1],
-                              longitude=bits[2], E_or_W=bits[3])
-        elif len(bits) == 6:
-            return coordinate(latd=bits[0], latm=bits[1], N_or_S=bits[2],
-                              longd=bits[3], longm=bits[4], E_or_W=bits[5])
-        elif len(bits) == 8:
-            return coordinate(latd=bits[0], latm=bits[1], lats=bits[2], N_or_S=bits[3],
-                              longd=bits[4], longm=bits[5], longs=bits[6], E_or_W=bits[7])
+            if len(bits) == 2:
+                return coordinate(latitude=bits[0], longitude=bits[1])
+
+            elif len(bits) == 4:
+                return coordinate(latitude=bits[0], N_or_S=bits[1],
+                                  longitude=bits[2], E_or_W=bits[3])
+            elif len(bits) == 6:
+                return coordinate(latd=bits[0], latm=bits[1], N_or_S=bits[2],
+                                  longd=bits[3], longm=bits[4], E_or_W=bits[5])
+            elif len(bits) == 8:
+                return coordinate(latd=bits[0], latm=bits[1], lats=bits[2], N_or_S=bits[3],
+                                  longd=bits[4], longm=bits[5], longs=bits[6], E_or_W=bits[7])
         
     except AttributeError:
         pass

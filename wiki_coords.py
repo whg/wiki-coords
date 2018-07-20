@@ -27,7 +27,7 @@ from util import grab_partn, make_title, grab_parto
 
 
 def save(title, text, latlon, file_dir, dryrun):
-
+    global file_writes
     lat, lon = latlon
     try:
         y = lat2y(float(lat))
@@ -37,11 +37,11 @@ def save(title, text, latlon, file_dir, dryrun):
     if not dryrun:
         cursor.execute('INSERT INTO %s (page,lat,lon,x,y) VALUES (%s,%s,%s,%s,%s)', (AsIs(db_table), title, lat, lon, lon, y)) 
 
-        # path = '%s/%s.wiki' % (file_dir, title,)
-        # if path not in already_written:
-        #     with open(path, 'w') as wf:
-        #         wf.write(text)
-
+    path = '%s2/%s.wiki' % (file_dir, title,)
+    if path not in already_written:
+        with open(path, 'w') as wf:
+            wf.write(text)
+        file_writes+= 1
     return True
 
 def lang_from_file(filename):
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     written = 0
     withcoord = 0
-    already_written = set() #glob('%s/*.wiki' % (file_directory,)))
+    already_written = glob('%s/*.wiki' % (file_directory,))
     regex = re.compile(r'latitude\s*=\s*(-?[0-9.]+)\s*\|\s*longitude\s*=\s*(-?[0-9.]+)\s')
 
     ib_regex = re.compile(r'{{\s*Infobox[^}]*}}')

@@ -5,9 +5,10 @@ Create a pickle file for the output of a psql query like:
 We assume that the type of the outputs is float!
 
 Usage:
-  pg2pickle.py <pg_output> [--output-dir=<d>]
-  pg2pickle.py (-h | --help)
-  pg2pickle.py --version
+  pg2data.py pickle <pg_output> [--output-dir=<d>]
+  pg2data.py fdata <pg_output> [--output-dir=<d>]
+  pg2data.py (-h | --help)
+  pg2data.py --version
 
 Options:
   -h --help           Show this screen.
@@ -18,7 +19,10 @@ Options:
 
 from docopt import docopt
 from collections import defaultdict
-import pickle
+
+def output_filename(type):
+    global filename
+    output_filename = '%s.%s' % (filename, type)
 
 args = docopt(__doc__, version='0.1')
 filename = args['<pg_output>']
@@ -34,6 +38,27 @@ with open(filename) as f:
         for part, column in zip(parts, column_names):
             data[column].append(float(part.strip()))
 
-    output_filename = '%s.pickle' % (filename,)
-    pickle.dump(data, open(output_filename, 'wb'))
+
+if args['pickle']:
+    import pickle
+
+    pickle.dump(data, open(output_filename('pickle'), 'wb'))
     
+elif args['fdata']:
+    import struct
+    from array import array
+
+    s = struct.pack('f', 4)
+    size = struct.pack('i', 12)
+    num = struct.pack('i', 2)
+    
+    numCols = len(data)
+    numRows = len(data[data.keys()[0]))
+
+    with open(output_filename('fdata'), 'wb') as f:
+        f.write(struct.pack('i', len(column_names)))
+        f.write(struct.pack('i', len(data[coloumn_names])))
+
+        for column in column_names:
+            f.write(array.fromlist(data[column].tobytes()))
+        

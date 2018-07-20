@@ -63,9 +63,9 @@ if __name__ == "__main__":
 
         if country != None:
             c = country.decode('utf-8')
-            if countries[c] < 3:
-                output.append((oggs[0], wiki_name, id, lat, lon))
-            countries[c]+= 1
+#            if countries[c] < 3:
+            output.append((oggs[0], wiki_name, id, lat, lon))
+ #           countries[c]+= 1
 
         # for ogg in oggs:
         #     output.append((ogg, wiki_name, id, lat, lon))

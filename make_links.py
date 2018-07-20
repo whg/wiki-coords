@@ -29,40 +29,55 @@ dry_run = args['--dry-run']
 db = psycopg2.connect("dbname=%s user=root" % args['--db'])
 cursor = db.cursor()
 
-links_re = re.compile(r'\[\[([^\]|]*)\]\]')
+links_re = re.compile(r'\[\[([^\]|]*)(?:\||(?:\]\]))')
 
 if not dry_run:
     table_name = '%s_links' % language
-    cursor.execute('CREATE TABLE %s (id serial primary key, from_id bigint, to_id bigint)' % (table_name))
+    cursor.execute('CREATE TABLE %s (id serial primary key, from_id bigint, to_id bigint)', (AsIs(table_name)))
     db.commit()
     print('created table %s' % table_name)
 
-cursor.execute('SELECT page, id FROM %s_pages' % (AsIs(language)))
+cursor.execute('SELECT page, id FROM %s_pages', (AsIs(language)))
 
 pages = dict(cursor.fetchall())
+
+cursor.execute('SELECT from_page, to_id FROM %s_redirects', (AsIs(language)))
+redirects = dict(cursor.fetchall())
 
 print(len(pages))
 added = 0
 tried = 0
+with_redirect = 0
+
+
 try:
     counter = 0
     for page, id in pages.items():
+
+        
         with open(filepath(language, page)) as f:
-            links = set(re.findall(links_re, f.read()))
-            # print(len(links))
-            # print(page)
-            # print([make_title(link) for link in links[:5]])
+            links = set([s.strip() for s in re.findall(links_re, f.read())])
+
             tried+= len(links)
+
             for link in links:
                 link_title = make_title(link)
-                if link_title in pages:
-                    if not dry_run:
-                        cursor.execute('INSERT INTO %s (from_id, to_id) VALUES (%s, %s)', (AsIs(table_name), id, pages[link_title]))
-                    added+= 1
+                i = 0
+                
+                for place in (pages, redirects):
+                    i+= 1
+                    if link_title in place:
+                        if not dry_run:
+                            cursor.execute('INSERT INTO %s (from_id, to_id) VALUES (%s, %s)', (AsIs(table_name), id, place[link_title]))
+                        added+= 1
+
+                        if i == 2:
+                            with_redirect+= 1
+
         counter+= 1
 
         if counter % 50 == 0:
-            stdout.write('\r%d: added %d, tried %d' % (counter, added, tried))
+            stdout.write('\r%d: added %d, tried %d (redirects %d)' % (counter, added, tried, with_redirect))
 except Exception as e:
 
     import traceback
